@@ -1,17 +1,16 @@
-import type { Activity, Trip } from "../models.js";
+import type { Activity, Trip, DestinationInfo } from "../models.js";
 
-export const getDestinationInfo = async (countryName: string) => {
-  const countryName2 = "sweden";
+export const getDestinationInfo = async (
+  countryName: string,
+): Promise<DestinationInfo> => {
   try {
     const response = await fetch(
-      `https://restcountries.com/v3.1/name/${countryName2}`,
+      `https://restcountries.com/v3.1/name/${countryName}`,
     );
     const data = await response.json();
-    console.log(data[0].flags.png);
-    console.log(data[0]);
 
     return {
-      currency: Object.keys(data[0].currencies)[0],
+      currency: Object.keys(data[0].currencies)[0] || "Unknown",
       flag: data[0].flag,
     };
   } catch (error) {
@@ -19,4 +18,6 @@ export const getDestinationInfo = async (countryName: string) => {
   }
 };
 
-getDestinationInfo("sweden");
+(async () => {
+  console.log(await getDestinationInfo("sweden"));
+})();
