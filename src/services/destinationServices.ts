@@ -18,6 +18,6 @@ export const getDestinationInfo = async (
   }
 };
 
-(async () => {
-  console.log(await getDestinationInfo("sweden"));
-})();
+// (async () => {
+//   console.log(await getDestinationInfo("sweden"));
+// })();
