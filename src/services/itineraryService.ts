@@ -1,9 +1,8 @@
 import type { Activity, Trip } from "../models.js";
 
-//Calculate total cost
-export const calculateTotalCost = (trip: Trip): number => {
-    return trip.activities.reduce((sum, activity)=> sum + activity.cost, 0)
-};
+//Calculate cost
+export const calculateTotalCost = (trip: Trip): number => 
+ trip.activities.reduce((sum, activity)=> sum + activity.cost, 0)
 
 //add activity
 export const addActivity = (trip: Trip, activity: Activity): Trip => {
@@ -17,7 +16,7 @@ export const addActivity = (trip: Trip, activity: Activity): Trip => {
 
 //Create a trip
 export const createTrip = (destination: string, startDate: Date): Trip => {
-    const id = Date.now().toString(); //Konverterar nuvarande tid i millesekunder till en sträng
+    const id = Date.now().toString(); //Konverterar  tid i millesekunder till en sträng
     return {
         id,
         destination,
@@ -25,3 +24,32 @@ export const createTrip = (destination: string, startDate: Date): Trip => {
         activities: []
       };
     };
+
+
+//Filter catergory
+export const filterByCategory = (trip: Trip, category: string): Activity[] => {
+  return trip.activities.filter((activity) => {
+     return activity.category === category;
+  });
+};
+
+
+
+//Sort activities
+export const sortActivitiesByTime = (trip: Trip): Activity[] => {
+  const sortedActivities = [...trip.activities];
+  
+  sortedActivities.sort((activity1, activity2) => 
+    activity1.startTime.getTime() - activity2.startTime.getTime());
+
+  return sortedActivities;
+};
+
+
+//filter activity by a specific day
+export const getActivitiesByDay = (trip: Trip, date: Date): Activity[] => {
+  return trip.activities.filter((activity) => 
+          activity.startTime.getFullYear() === date.getFullYear() &&
+          activity.startTime.getMonth() === date.getMonth() &&
+          activity.startTime.getDate() === date.getDate()
+)};
