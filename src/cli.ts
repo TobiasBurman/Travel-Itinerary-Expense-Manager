@@ -1,16 +1,13 @@
 import inquirer from "inquirer";
-import type { Trip, Activity } from "./models.ts";
+import type { Trip, Activity } from "./models.js";
 import {
   createTrip,
   addActivity,
   calculateTotalCost,
-} from "./services/itineraryService.ts";
-import { getDestinationInfo } from "./services/destinationServices.ts";
-import fs from "fs";
+} from "./services/itineraryService.js";
 
 let currentTrip: Trip | null = null;
 
-//Create Trip FUNC
 const handleCreateTrip = async () => {
   const answers = await inquirer.prompt([
     {
@@ -24,84 +21,89 @@ const handleCreateTrip = async () => {
       message: "Start date (YYYY-MM-DD):",
     },
   ]);
+  
   const date = new Date(answers.startDate);
   currentTrip = createTrip(answers.destination, date);
-  console.log(`Trip to ${currentTrip.destination} created!\n`);
+  console.log("Trip to " + currentTrip.destination + " created!");
 };
 
-//create activity
 const handleAddActivity = async () => {
   if (!currentTrip) {
-    console.log("Please create a trip first.");
+    console.log("No trip yet. Create one first.");
     return;
-  } else {
-    const answersAddActivity = await inquirer.prompt([
-      {
-        type: "input",
-        name: "activityName",
-        message: "What activity would you like to add?",
-      },
-      {
-        type: "input",
-        name: "cost",
-        message: "What is the cost of this activity?",
-      },
-      {
-        type: "input",
-        name: "startDate",
-        message: "Activity start date (YYYY-MM-DD):",
-      },
-      {
-        type: "checkbox",
-        name: "category",
-        message: "Select category:",
-        choices: ["sightseeing", "food", "transport"],
-      },
-    ]);
-    const activity: Activity = {
-      name: answersAddActivity.activityName,
-      cost: parseFloat(answersAddActivity.cost),
-      category: answersAddActivity.category,
-      startTime: new Date(answersAddActivity.startDate),
-      id: Date.now().toString(),
-    };
-    addActivity(currentTrip, activity);
   }
+
+  const answers = await inquirer.prompt([
+    {
+      type: "input",
+      name: "activityName",
+      message: "Activity name:",
+    },
+    {
+      type: "number",
+      name: "cost",
+      message: "Cost (SEK):",
+    },
+    {
+      type: "input",
+      name: "startDate",
+      message: "Date (YYYY-MM-DD HH:mm):",
+    },
+    {
+      type: "list",
+      name: "category",
+      message: "Category:",
+      choices: ["sightseeing", "food", "transport"],
+    },
+  ]);
+
+  const activity: Activity = {
+    id: Date.now().toString(),
+    name: answers.activityName,
+    cost: answers.cost,
+    category: answers.category,
+    startTime: new Date(answers.startDate),
+  };
+
+  currentTrip = addActivity(currentTrip, activity);
+  console.log("Added " + activity.name);
 };
 
-const handleViewTrip = async () => {
+const handleViewTrip = () => {
   if (!currentTrip) {
-    console.log("No trip created yet.");
+    console.log("No trip created.");
     return;
   }
-  const data = await JSON.parse(fs.readFileSync("../db.json", "utf-8"));
-  //get data from
-  const trip = data.trips.find((trip: Trip) => trip.id === currentTrip?.id);
+
   console.log("\n--- Trip Details ---");
-  console.log(`Destination: ${trip.destination}`);
-  console.log(`Start Date: ${trip.startDate}`);
-  console.log("--- Activities ---");
-  trip.activities.forEach((activity: Activity) => {
-    console.log(
-      `Activity: ${activity.name}, Cost: ${activity.cost}, Category: ${activity.category.join(", ")}`,
-    );
-  });
+  console.log("Destination: " + currentTrip.destination);
+  console.log("Start: " + currentTrip.startDate.toLocaleDateString());
+  console.log("Total cost: " + calculateTotalCost(currentTrip) + " SEK");
+  
+  console.log("\n--- Activities ---");
+  if (currentTrip.activities.length === 0) {
+    console.log("No activities.");
+  } else {
+    currentTrip.activities.forEach((activity, index) => {
+      console.log((index + 1) + ". " + activity.name);
+      console.log("   Cost: " + activity.cost + " SEK");
+      console.log("   Category: " + activity.category);
+    });
+  }
+  console.log("");
 };
 
 const mainMenu = async () => {
-  console.log("\nWelcome to the Travel Itinerary Planner!");
-
   const answers = await inquirer.prompt([
     {
       type: "list",
       name: "action",
-      message: "What would you like to do?",
+      message: "What do you want to do?",
       choices: [
         "Create Trip",
         "Add Activity",
         "View Trip",
         "View Budget",
-        "Delete All Trips",
         "Exit",
       ],
     },
@@ -109,25 +111,23 @@ const mainMenu = async () => {
 
   if (answers.action === "Create Trip") {
     await handleCreateTrip();
-  } else if (answers.action === "Add Activity") {
+  } 
+  else if (answers.action === "Add Activity") {
     await handleAddActivity();
-  } else if (answers.action === "View Trip") {
-    await handleViewTrip();
-  } else if (answers.action === "Delete All Trips") {
-    const data = JSON.parse(fs.readFileSync("../db.json", "utf-8"));
-    data.trips = [];
-    fs.writeFileSync("../db.json", JSON.stringify(data, null, 2));
-    console.log("All trips deleted.");
-  }
-  //   else if (answers.action === 'View Budget') {
-
-  //   }
+  } 
+  else if (answers.action === "View Trip") {
+    handleViewTrip();
+  } 
+  else if (answers.action === "View Budget") {
+    console.log("error"); //Khadija function
+  } 
   else if (answers.action === "Exit") {
-    console.log("Goodbye");
+    console.log("Goodbye!");
     return;
   }
 
   await mainMenu();
 };
 
+console.log("Travel Planner");
 mainMenu();
