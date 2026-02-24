@@ -1,5 +1,6 @@
 import type { Activity, Trip, DestinationInfo } from "../models.js";
 
+//Fetch destination info
 export const getDestinationInfo = async (
   countryName: string,
 ): Promise<DestinationInfo> => {
@@ -17,7 +18,3 @@ export const getDestinationInfo = async (
     throw new Error("Could not fetch country data");
   }
 };
-
-// (async () => {
-//   console.log(await getDestinationInfo("sweden"));
-// })();
