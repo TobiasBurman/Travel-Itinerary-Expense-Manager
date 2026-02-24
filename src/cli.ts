@@ -5,6 +5,7 @@ import {
   addActivity,
   calculateTotalCost,
   filterByCategory,
+  getActivitiesByDay,
 } from "./services/itineraryService.ts";
 import { getDestinationInfo } from "./services/destinationServices.ts";
 
@@ -133,6 +134,34 @@ const handleviewByCategory = async () => {
   }
 };
 
+const handleviewByDay = async () => {
+  if (!currentTrip) {
+    console.log("No trip created.");
+    return;
+  } else {
+    const answer = await inquirer.prompt([
+      {
+        type: "input",
+        name: "date",
+        message: "Enter date to filter (YYYY-MM-DD):",
+      },
+    ]);
+    const date = new Date(answer.date);
+    const getDayData = await getActivitiesByDay(currentTrip, date);
+
+    console.log("\n--- Activities on " + answer.date + " ---");
+    if (getDayData.length === 0) {
+      console.log("No activities on this day.");
+    } else {
+      getDayData.forEach((activity, index) => {
+        console.log(index + 1 + ". " + "Activity: " + activity.name);
+        console.log("   Cost: " + activity.cost + " SEK");
+        console.log("   Category: " + activity.category);
+      });
+    }
+  }
+};
+
 const mainMenu = async () => {
   const answers = await inquirer.prompt([
     {
@@ -143,7 +172,8 @@ const mainMenu = async () => {
         "Create Trip",
         "Add Activity",
         "View Trip",
-        "View by Category",
+        "View Activities by Category",
+        "View Activities by Day",
         "View Budget",
         "Exit",
       ],
@@ -156,8 +186,10 @@ const mainMenu = async () => {
     await handleAddActivity();
   } else if (answers.action === "View Trip") {
     await handleViewTrip();
-  } else if (answers.action === "View by Category") {
+  } else if (answers.action === "View Activities by Category") {
     await handleviewByCategory();
+  } else if (answers.action === "View Activities by Day") {
+    await handleviewByDay();
   } else if (answers.action === "View Budget") {
     console.log("error"); //Khadija function
   } else if (answers.action === "Exit") {
