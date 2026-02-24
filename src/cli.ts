@@ -6,6 +6,7 @@ import {
   calculateTotalCost,
 } from "./services/itineraryService.ts";
 import { getDestinationInfo } from "./services/destinationServices.ts";
+import fs from "fs";
 
 let currentTrip: Trip | null = null;
 
@@ -68,6 +69,25 @@ const handleAddActivity = async () => {
   }
 };
 
+const handleViewTrip = async () => {
+  if (!currentTrip) {
+    console.log("No trip created yet.");
+    return;
+  }
+  const data = await JSON.parse(fs.readFileSync("../db.json", "utf-8"));
+  //get data from
+  const trip = data.trips.find((trip: Trip) => trip.id === currentTrip?.id);
+  console.log("\n--- Trip Details ---");
+  console.log(`Destination: ${trip.destination}`);
+  console.log(`Start Date: ${trip.startDate}`);
+  console.log("--- Activities ---");
+  trip.activities.forEach((activity: Activity) => {
+    console.log(
+      `Activity: ${activity.name}, Cost: ${activity.cost}, Category: ${activity.category.join(", ")}`,
+    );
+  });
+};
+
 const mainMenu = async () => {
   console.log("\nWelcome to the Travel Itinerary Planner!");
 
@@ -81,6 +101,7 @@ const mainMenu = async () => {
         "Add Activity",
         "View Trip",
         "View Budget",
+        "Delete All Trips",
         "Exit",
       ],
     },
@@ -91,7 +112,12 @@ const mainMenu = async () => {
   } else if (answers.action === "Add Activity") {
     await handleAddActivity();
   } else if (answers.action === "View Trip") {
-    // handleViewTrip();
+    await handleViewTrip();
+  } else if (answers.action === "Delete All Trips") {
+    const data = JSON.parse(fs.readFileSync("../db.json", "utf-8"));
+    data.trips = [];
+    fs.writeFileSync("../db.json", JSON.stringify(data, null, 2));
+    console.log("All trips deleted.");
   }
   //   else if (answers.action === 'View Budget') {
 
