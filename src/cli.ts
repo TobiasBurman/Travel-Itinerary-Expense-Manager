@@ -5,27 +5,37 @@ import {
   addActivity,
   calculateTotalCost,
 } from "./services/itineraryService.js";
+import { getDestinationInfo } from "./services/destinationServices.js";
+
 
 let currentTrip: Trip | null = null;
 
 const handleCreateTrip = async () => {
-  const answers = await inquirer.prompt([
-    {
-      type: "input",
-      name: "destination",
-      message: "Where do you want to go?",
-    },
-    {
-      type: "input",
-      name: "startDate",
-      message: "Start date (YYYY-MM-DD):",
-    },
-  ]);
-  
-  const date = new Date(answers.startDate);
-  currentTrip = createTrip(answers.destination, date);
-  console.log("Trip to " + currentTrip.destination + " created!");
-};
+    const answers = await inquirer.prompt([
+      {
+        type: "input",
+        name: "destination",
+        message: "Where do you want to go?",
+      },
+      {
+        type: "input",
+        name: "startDate",
+        message: "Start date (YYYY-MM-DD):",
+      },
+    ]);
+    
+    const date = new Date(answers.startDate);
+    currentTrip = createTrip(answers.destination, date);
+    //destination detailss
+    try {
+      const info = await getDestinationInfo(answers.destination);
+      console.log("Trip to " + currentTrip.destination + " created :))");
+      console.log("Currency: " + info.currency);
+      console.log("Flag: " + info.flag);
+    } catch (error) {
+      console.log("Trip to " + currentTrip.destination + " created :))");
+    }
+  }
 
 const handleAddActivity = async () => {
   if (!currentTrip) {
