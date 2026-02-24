@@ -11,6 +11,7 @@ import { getDestinationInfo } from "./services/destinationServices.ts";
 
 let currentTrip: Trip | null = null;
 
+//Create a trip
 const handleCreateTrip = async () => {
   const answers = await inquirer.prompt([
     {
@@ -38,6 +39,7 @@ const handleCreateTrip = async () => {
   }
 };
 
+//Add activity
 const handleAddActivity = async () => {
   if (!currentTrip) {
     console.log("No trip yet. Create one first.");
@@ -80,6 +82,7 @@ const handleAddActivity = async () => {
   console.log("Added " + activity.name);
 };
 
+//View trip details
 const handleViewTrip = () => {
   if (!currentTrip) {
     console.log("No trip created.");
@@ -104,6 +107,7 @@ const handleViewTrip = () => {
   console.log("");
 };
 
+//View by category
 const handleviewByCategory = async () => {
   if (!currentTrip) {
     console.log("No trip created.");
@@ -134,6 +138,7 @@ const handleviewByCategory = async () => {
   }
 };
 
+//View by day
 const handleviewByDay = async () => {
   if (!currentTrip) {
     console.log("No trip created.");
@@ -162,6 +167,7 @@ const handleviewByDay = async () => {
   }
 };
 
+//View Choice
 const mainMenu = async () => {
   const answers = await inquirer.prompt([
     {
