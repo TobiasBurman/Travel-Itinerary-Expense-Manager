@@ -3,15 +3,15 @@ import type { Trip, Activity } from "./models.ts";
 import {
   createTrip,
   addActivity,
-  calculateTotalCost,
   filterByCategory,
   getActivitiesByDay,
 } from "./services/itineraryService.ts";
 import { getDestinationInfo } from "./services/destinationServices.ts";
+import { calculateTotalCost } from "./services/budgetService.ts";
 
 let currentTrip: Trip | null = null;
 
-//Create a trip
+// Create a trip
 const handleCreateTrip = async () => {
   const answers = await inquirer.prompt([
     {
@@ -28,18 +28,18 @@ const handleCreateTrip = async () => {
 
   const date = new Date(answers.startDate);
   currentTrip = createTrip(answers.destination, date);
-  //destination detailss
+
   try {
     const info = await getDestinationInfo(answers.destination);
     console.log("Trip to " + currentTrip.destination + " created :))");
     console.log("Currency: " + info.currency);
     console.log("Flag: " + info.flag);
-  } catch (error) {
+  } catch {
     console.log("Trip to " + currentTrip.destination + " created :))");
   }
 };
 
-//Add activity
+// Add activity
 const handleAddActivity = async () => {
   if (!currentTrip) {
     console.log("No trip yet. Create one first.");
@@ -82,7 +82,7 @@ const handleAddActivity = async () => {
   console.log("Added " + activity.name);
 };
 
-//View trip details
+// View trip details
 const handleViewTrip = () => {
   if (!currentTrip) {
     console.log("No trip created.");
@@ -99,7 +99,7 @@ const handleViewTrip = () => {
     console.log("No activities.");
   } else {
     currentTrip.activities.forEach((activity, index) => {
-      console.log(index + 1 + ". " + "Activity: " + activity.name);
+      console.log(index + 1 + ". Activity: " + activity.name);
       console.log("   Cost: " + activity.cost + " SEK");
       console.log("   Category: " + activity.category);
     });
@@ -107,67 +107,72 @@ const handleViewTrip = () => {
   console.log("");
 };
 
-//View by category
+// View by category
 const handleviewByCategory = async () => {
   if (!currentTrip) {
     console.log("No trip created.");
     return;
+  }
+
+  const answer = await inquirer.prompt([
+    {
+      type: "list",
+      name: "category",
+      message: "Select category to filter:",
+      choices: ["sightseeing", "food", "transport"],
+    },
+  ]);
+
+  const getcategoryData = await filterByCategory(
+    currentTrip,
+    answer.category
+  );
+
+  console.log("\n--- Activities in category: " + answer.category + " ---");
+
+  if (getcategoryData.length === 0) {
+    console.log("No activities in this category.");
   } else {
-    const answer = await inquirer.prompt([
-      {
-        type: "list",
-        name: "category",
-        message: "Select category to filter:",
-        choices: ["sightseeing", "food", "transport"],
-      },
-    ]);
-    const getcategoryData = await filterByCategory(
-      currentTrip,
-      answer.category,
-    );
-    console.log("\n--- Activities in category: " + answer.category + " ---");
-    if (getcategoryData.length === 0) {
-      console.log("No activities in this category.");
-    } else {
-      getcategoryData.forEach((activity, index) => {
-        console.log(index + 1 + ". " + "Activity: " + activity.name);
-        console.log("   Cost: " + activity.cost + " SEK");
-        console.log("   Start Time: " + activity.startTime.toLocaleString());
-      });
-    }
+    getcategoryData.forEach((activity, index) => {
+      console.log(index + 1 + ". Activity: " + activity.name);
+      console.log("   Cost: " + activity.cost + " SEK");
+      console.log("   Start Time: " + activity.startTime.toLocaleString());
+    });
   }
 };
 
-//View by day
+// View by day
 const handleviewByDay = async () => {
   if (!currentTrip) {
     console.log("No trip created.");
     return;
-  } else {
-    const answer = await inquirer.prompt([
-      {
-        type: "input",
-        name: "date",
-        message: "Enter date to filter (YYYY-MM-DD):",
-      },
-    ]);
-    const date = new Date(answer.date);
-    const getDayData = await getActivitiesByDay(currentTrip, date);
+  }
 
-    console.log("\n--- Activities on " + answer.date + " ---");
-    if (getDayData.length === 0) {
-      console.log("No activities on this day.");
-    } else {
-      getDayData.forEach((activity, index) => {
-        console.log(index + 1 + ". " + "Activity: " + activity.name);
-        console.log("   Cost: " + activity.cost + " SEK");
-        console.log("   Category: " + activity.category);
-      });
-    }
+  const answers = await inquirer.prompt([
+    {
+      type: "input",
+      name: "date",
+      message: "Enter date to filter (YYYY-MM-DD):",
+    },
+  ]);
+
+  const date = new Date(answers.date); // ✅ FIXED
+  const getDayData = await getActivitiesByDay(currentTrip, date);
+
+  console.log("\n--- Activities on " + answers.date + " ---");
+
+  if (getDayData.length === 0) {
+    console.log("No activities on this day.");
+  } else {
+    getDayData.forEach((activity, index) => {
+      console.log(index + 1 + ". Activity: " + activity.name);
+      console.log("   Cost: " + activity.cost + " SEK");
+      console.log("   Category: " + activity.category);
+    });
   }
 };
 
-//View Choice
+// Main menu
 const mainMenu = async () => {
   const answers = await inquirer.prompt([
     {
@@ -191,13 +196,18 @@ const mainMenu = async () => {
   } else if (answers.action === "Add Activity") {
     await handleAddActivity();
   } else if (answers.action === "View Trip") {
-    await handleViewTrip();
+    handleViewTrip();
   } else if (answers.action === "View Activities by Category") {
     await handleviewByCategory();
   } else if (answers.action === "View Activities by Day") {
     await handleviewByDay();
   } else if (answers.action === "View Budget") {
-    console.log("error"); //Khadija function
+    if (!currentTrip) {
+      console.log("No trip found. Please create a trip first.");
+    } else {
+      const total = calculateTotalCost(currentTrip);
+      console.log("Total Budget:", total);
+    }
   } else if (answers.action === "Exit") {
     console.log("Goodbye!");
     return;
